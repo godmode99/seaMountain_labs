@@ -1,0 +1,87 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        String    @id @default(uuid())
+  email     String    @unique
+  password  String
+  userHubs  UserHub[]
+}
+
+model UserHub {
+  id     String @id @default(uuid())
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+  hub    Hub    @relation(fields: [hubId], references: [id])
+  hubId  String
+  role   String
+}
+
+model Hub {
+  id            String         @id @default(uuid())
+  name          String
+  serial        String         @unique
+  apiKey        String         @unique
+  userHubs      UserHub[]
+  nodes         Node[]
+  notifications Notification[]
+}
+
+model Node {
+  id        String     @id @default(uuid())
+  name      String
+  hub       Hub        @relation(fields: [hubId], references: [id])
+  hubId     String
+  sensors   Sensor[]
+  actuators Actuator[]
+}
+
+model Sensor {
+  id         String       @id @default(uuid())
+  node       Node         @relation(fields: [nodeId], references: [id])
+  nodeId     String
+  type       String
+  unit       String
+  sensorData SensorData[]
+}
+
+model SensorData {
+  id        String   @id @default(uuid())
+  sensor    Sensor   @relation(fields: [sensorId], references: [id])
+  sensorId  String
+  value     Float
+  status    String?
+  timestamp DateTime @default(now())
+}
+
+model Actuator {
+  id          String        @id @default(uuid())
+  node        Node          @relation(fields: [nodeId], references: [id])
+  nodeId      String
+  type        String
+  actuatorLog ActuatorLog[]
+}
+
+model ActuatorLog {
+  id         String     @id @default(uuid())
+  actuator   Actuator   @relation(fields: [actuatorId], references: [id])
+  actuatorId String
+  command    String
+  status     String?
+  timestamp  DateTime   @default(now())
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  hub       Hub      @relation(fields: [hubId], references: [id])
+  hubId     String
+  type      String
+  message   String
+  createdAt DateTime @default(now())
+}
